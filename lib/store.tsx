@@ -115,7 +115,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [data]);
 
   const tz = data.profile?.timezone ?? DEFAULT_TZ;
-  const today = useLogicalDate(tz);
+  const dayStart = data.profile?.day_start_hour ?? 3;
+  const today = useLogicalDate(tz, dayStart);
 
   // Persist every change to the cache.
   useEffect(() => {
@@ -157,7 +158,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setReady(true);
       return;
     }
-    const date = logicalDate(new Date(), profile.timezone);
+    const date = logicalDate(new Date(), profile.timezone, profile.day_start_hour);
     const [foods, pantry, meals, water, summary] = await Promise.all([
       supabase.from("regular_foods").select("id, meal_slot, description, typical_kcal, typical_protein").order("created_at"),
       supabase.from("pantry").select("id, ingredient").order("ingredient"),
@@ -372,7 +373,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           .upsert(
             {
               user_id: userId,
-              logged_on: logicalDate(new Date(), row.timezone),
+              logged_on: logicalDate(new Date(), row.timezone, row.day_start_hour),
               weight_kg: patch.weight_kg,
             },
             { onConflict: "user_id,logged_on" },

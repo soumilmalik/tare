@@ -59,6 +59,7 @@ export async function POST(request: Request) {
     const result = await callAi({
       userId,
       timezone: ctx.timezone,
+      dayStartHour: ctx.dayStartHour,
       feature: "monthly",
       tier: "text",
       system:

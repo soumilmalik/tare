@@ -71,9 +71,9 @@ export const SuggestionsSchema = z.object({
   suggestions: z.array(
     z.object({
       name: z.string(),
-      why: z.string().describe("One line: why this fits right now"),
-      ingredients: z.array(z.string()),
-      steps: z.array(z.string()).describe("2–5 short steps"),
+      why: z.string().describe("Why it fits right now, under 15 words"),
+      ingredients: z.array(z.string()).describe("At most 6, each with an amount, e.g. '2 eggs'"),
+      steps: z.array(z.string()).describe("2–4 steps, each under 12 words"),
       items: z.array(ItemSchema).describe("What would be logged if the user eats this"),
     }),
   ),
@@ -106,21 +106,26 @@ export interface UserContext {
   remaining?: { kcal: number; protein: number };
 }
 
-export async function loadUserContext(userId: string): Promise<UserContext & { timezone: string }> {
+export async function loadUserContext(
+  userId: string,
+  { pantry: withPantry = true }: { pantry?: boolean } = {},
+): Promise<UserContext & { timezone: string; dayStartHour: number }> {
   const supabase = await createClient();
   const [profile, foods, pantry] = await Promise.all([
     supabase
       .from("profiles")
-      .select("diet_type, allergies_or_avoid, timezone")
+      .select("diet_type, allergies_or_avoid, timezone, day_start_hour")
       .eq("user_id", userId)
       .maybeSingle(),
-    supabase.from("regular_foods").select("meal_slot, description").limit(30),
-    supabase.from("pantry").select("ingredient").limit(60),
+    supabase.from("regular_foods").select("meal_slot, description").limit(15),
+    // Only suggestions need the pantry; skipping it keeps estimate prompts small.
+    withPantry ? supabase.from("pantry").select("ingredient").limit(40) : Promise.resolve({ data: [] }),
   ]);
   return {
     dietType: profile.data?.diet_type ?? null,
     avoid: profile.data?.allergies_or_avoid ?? null,
     timezone: profile.data?.timezone ?? "Asia/Kolkata",
+    dayStartHour: profile.data?.day_start_hour ?? 3,
     regularFoods: (foods.data ?? []).map((f) => `${f.meal_slot}: ${f.description}`),
     pantry: (pantry.data ?? []).map((p) => p.ingredient),
   };
@@ -149,15 +154,15 @@ export async function requireUser(): Promise<string> {
   return sub;
 }
 
-async function checkLimit(userId: string, timezone: string) {
+async function checkLimit(timezone: string, dayStartHour: number) {
   const supabase = await createClient();
-  // Start of the user's logical day (3 AM local) as a UTC timestamp.
-  const today = logicalDate(new Date(), timezone);
+  const today = logicalDate(new Date(), timezone, dayStartHour);
   const since = new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString();
   const { data } = await supabase.from("ai_usage").select("created_at").gte("created_at", since);
-  const usedToday = (data ?? []).filter((r) => logicalDate(new Date(r.created_at), timezone) === today).length;
+  const usedToday = (data ?? []).filter((r) => logicalDate(new Date(r.created_at), timezone, dayStartHour) === today).length;
   if (usedToday >= DAILY_LIMIT) {
-    throw new AiError(`You've used today's ${DAILY_LIMIT} AI requests. It resets at 3 AM.`, 429);
+    const at = new Intl.DateTimeFormat("en-IN", { hour: "numeric", timeZone: "UTC" }).format(Date.UTC(2000, 0, 1, dayStartHour));
+    throw new AiError(`You've used today's ${DAILY_LIMIT} AI requests. It resets at ${at}.`, 429);
   }
 }
 
@@ -188,6 +193,7 @@ function anthropic() {
 export async function callAi<S extends z.ZodType>({
   userId,
   timezone,
+  dayStartHour = 3,
   feature,
   tier,
   system,
@@ -197,6 +203,7 @@ export async function callAi<S extends z.ZodType>({
 }: {
   userId: string;
   timezone: string;
+  dayStartHour?: number;
   feature: Feature;
   tier: Tier;
   system: string;
@@ -204,7 +211,7 @@ export async function callAi<S extends z.ZodType>({
   schema: S;
   maxTokens?: number;
 }): Promise<z.infer<S>> {
-  await checkLimit(userId, timezone);
+  await checkLimit(timezone, dayStartHour);
   const model = MODEL[tier];
   const isSonnet55 = model === "claude-sonnet-5-5";
 

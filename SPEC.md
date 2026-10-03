@@ -253,3 +253,6 @@ For each phase: list what you'll build, build it, then tell me exactly how to te
 - **Extra tables:** `weight_logs` (weight trend in Insights) and `reminder_log` (each reminder at most once a day).
 - **Scheduler (§11):** Supabase `pg_cron` calls `/api/cron/reminders` every 15 minutes (Vercel's free cron only runs daily).
 - **Extra packages:** `@anthropic-ai/sdk`, `web-push`.
+- **Day start (§5):** each user picks when their day resets (midnight–6 AM, default 3 AM) in onboarding and Profile (`profiles.day_start_hour`).
+- **Cost control (§8, §12):** AI Meals suggestions are made only when the user taps a button (not on opening the tab); estimate prompts omit the pantry; suggestion answers are kept short.
+- **Status bar:** `black`, not `black-translucent` (the translucent style makes iOS shorten home-screen apps at the bottom).

@@ -1,8 +1,7 @@
 "use client";
 
 import { RefreshCw } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import { useAppNav } from "@/components/app-context";
+import { useState } from "react";
 import { DictateButton } from "@/components/dictate-button";
 import { useLogFlow } from "@/components/log/log-flow";
 import { CardFlip } from "@/components/meals/card-flip";
@@ -46,7 +45,6 @@ interface Cached {
 
 export function AiMealsScreen() {
   const store = useStore();
-  const { tab } = useAppNav();
   const flow = useLogFlow();
   const p = store.profile;
   const tz = p?.timezone ?? DEFAULT_TZ;
@@ -60,25 +58,12 @@ export function AiMealsScreen() {
 
   const [hunger, setHunger] = useState<Hunger | null>(null);
   const [note, setNote] = useState("");
-  const [request, setRequest] = useState<{ hunger: Hunger | null; note: string }>({ hunger: null, note: "" });
-  const [loadingKey, setLoadingKey] = useState<string | null>(null);
-  const [error, setError] = useState<{ key: string; message: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Suggestions are cached until something they depend on changes (SPEC §8):
-  // a new log, a pantry edit, or a hunger request. Reopening the tab reuses them.
-  const key = useMemo(
-    () =>
-      [
-        store.today,
-        slot,
-        store.totals.kcal,
-        store.totals.protein,
-        store.pantry.map((x) => x.ingredient).join(","),
-        request.hunger,
-        request.note,
-      ].join("|"),
-    [store.today, slot, store.totals.kcal, store.totals.protein, store.pantry, request],
-  );
+  // Suggestions are made only when asked (each one is an AI call), then kept
+  // for this meal slot today, so reopening the tab costs nothing.
+  const slotKey = `${store.today}|${slot}`;
   const cacheKey = `tare.suggest.${store.userId}`;
   const [cache, setCache] = useState<Cached | null>(() => {
     try {
@@ -87,35 +72,24 @@ export function AiMealsScreen() {
       return null;
     }
   });
-  const current = cache?.key === key ? cache.suggestions : null;
-  const loading = loadingKey === key;
-  const shouldFetch =
-    tab === "ai-meals" && !current && !loading && error?.key !== key && store.ready && !!p && store.online;
+  const current = cache?.key === slotKey ? cache.suggestions : null;
 
-  useEffect(() => {
-    if (!shouldFetch) return;
-    const requestKey = key;
-    // Marks this key as in flight; the fetch below resolves it.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoadingKey(requestKey);
-    postJson<{ suggestions: Suggestion[] }>("/api/ai/suggest", {
-      slot,
-      remaining: left,
-      hunger: request.hunger,
-      note: request.note,
-    })
-      .then((res) => {
-        const next = { key: requestKey, suggestions: res.suggestions };
-        setCache(next);
-        try {
-          localStorage.setItem(cacheKey, JSON.stringify(next));
-        } catch {}
-      })
-      .catch((err) => setError({ key: requestKey, message: (err as Error).message }))
-      .finally(() => setLoadingKey((k) => (k === requestKey ? null : k)));
-    // `left`, `slot` and `request` are all captured in `key`.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldFetch, key]);
+  async function suggest(request: { hunger: Hunger | null; note: string }) {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await postJson<{ suggestions: Suggestion[] }>("/api/ai/suggest", { slot, remaining: left, ...request });
+      const next = { key: slotKey, suggestions: res.suggestions };
+      setCache(next);
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(next));
+      } catch {}
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <Screen
@@ -129,16 +103,21 @@ export function AiMealsScreen() {
       <p className="mt-1 text-xs text-text-3">{label}</p>
 
       <section className="mt-6 space-y-3" aria-busy={loading}>
-        {!store.online && !current && <p className="text-sm text-text-3">Suggestions need internet.</p>}
-        {loading && !current && <Thinking className="py-6" label="Finding meal ideas" />}
-        {error?.key === key && !current && (
-          <div className="space-y-3">
-            <p className="text-sm text-text-2">{error.message}</p>
-            <button type="button" className={secondaryButton} onClick={() => setError(null)}>
-              Try again
+        {loading ? (
+          <Thinking className="py-4" label="Finding meal ideas" />
+        ) : (
+          !current && (
+            <button
+              type="button"
+              className={secondaryButton}
+              disabled={!store.online}
+              onClick={() => suggest({ hunger: null, note: "" })}
+            >
+              {store.online ? "Suggest my next meal" : "Suggestions need internet"}
             </button>
-          </div>
+          )
         )}
+        {error && <p className="text-sm text-text-2">{error}</p>}
         {current?.map((s) => {
           const t = draftTotals(s.items);
           return (
@@ -149,14 +128,12 @@ export function AiMealsScreen() {
             />
           );
         })}
-        {current && (
+        {current && !loading && (
           <button
             type="button"
-            onClick={() => {
-              setCache(null);
-              setError(null);
-            }}
-            className="flex min-h-11 items-center gap-2 text-sm text-text-2"
+            disabled={!store.online}
+            onClick={() => suggest({ hunger, note: note.trim() })}
+            className="flex min-h-11 items-center gap-2 text-sm text-text-2 disabled:opacity-40"
           >
             <RefreshCw className="size-4" /> Different options
           </button>
@@ -194,11 +171,8 @@ export function AiMealsScreen() {
         <button
           type="button"
           className={secondaryButton}
-          disabled={!hunger && !note.trim()}
-          onClick={() => {
-            setError(null);
-            setRequest({ hunger, note: note.trim() });
-          }}
+          disabled={(!hunger && !note.trim()) || loading || !store.online}
+          onClick={() => suggest({ hunger, note: note.trim() })}
         >
           Get options
         </button>

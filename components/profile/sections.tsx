@@ -2,6 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { DayStartSelect } from "@/components/day-start-select";
 import { DictateButton } from "@/components/dictate-button";
 import {
   BasicsFields,
@@ -18,7 +19,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { createClient } from "@/lib/supabase/client";
 import { enablePush, pushPermission, pushSupport } from "@/lib/push";
 import { useStore } from "@/lib/store";
-import { calculateTargets, targetInputFromProfile } from "@/lib/targets";
+import { calculateTargets, lowWaterMl, targetInputFromProfile } from "@/lib/targets";
 import type { DailySummary, MealLog, MealSlot, Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -255,6 +256,17 @@ export function TargetsSection() {
         </button>
       )}
       {msg && <p className="mt-2 text-sm text-text-2">{msg}</p>}
+      <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3">
+        <label htmlFor="day-start-profile" className="text-sm">
+          New day starts at
+          <span className="block text-xs text-text-3">Food before this counts for the day before</span>
+        </label>
+        <DayStartSelect
+          id="day-start-profile"
+          value={profile.day_start_hour ?? 3}
+          onChange={async (h) => setMsg((await saveProfile({ day_start_hour: h })) ?? "Saved.")}
+        />
+      </div>
     </Section>
   );
 }
@@ -409,7 +421,7 @@ export function NotificationsSection() {
         <div className={row}>
           <span className="text-sm">
             Low water
-            <span className="block text-xs text-text-3">If you&apos;re below {Math.max(1500, Math.round(0.75 * (profile.target_water_ml ?? 2000)))} ml</span>
+            <span className="block text-xs text-text-3">If you&apos;re below {lowWaterMl(profile.target_water_ml).toLocaleString("en-IN")} ml</span>
           </span>
           <span className="flex items-center gap-3">
             {profile.notify_water && time(profile.water_reminder_time, (v) => set({ water_reminder_time: v }), "Water reminder time")}

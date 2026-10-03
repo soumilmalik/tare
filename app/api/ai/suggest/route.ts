@@ -31,7 +31,7 @@ Rules:
 - Build mainly from the user's usual meals and foods, then similar alternatives they don't usually have. Prefer ingredients they have at home.
 - Strictly respect their diet and foods to avoid.
 - Use Indian portions (roti, katori, bowl, glass) and realistic Indian home cooking.
-- Each option: short name, a one-line reason, ingredients with amounts, 2–5 short steps, and the items as they'd be logged (with kcal and macros).
+- Each option: short name, a reason under 15 words, at most 6 ingredients with amounts, 2–4 very short steps, and the items as they'd be logged (with kcal and macros). Be brief everywhere.
 
 About the user:
 ${contextBlock({ ...ctx, remaining })}`;
@@ -45,6 +45,7 @@ ${contextBlock({ ...ctx, remaining })}`;
     const result = await callAi({
       userId,
       timezone: ctx.timezone,
+      dayStartHour: ctx.dayStartHour,
       feature: hunger ? "hunger" : "suggest",
       tier: "text",
       system,

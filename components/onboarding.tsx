@@ -3,6 +3,7 @@
 import { ChevronLeft, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
+import { DayStartSelect } from "@/components/day-start-select";
 import { DictateButton } from "@/components/dictate-button";
 import {
   BasicsFields,
@@ -42,7 +43,7 @@ const TITLES: Record<Step, string> = {
   meals: "What you usually eat",
   pantry: "Usually at home",
   creatine: "Creatine",
-  notifications: "Reminders",
+  notifications: "Your day",
   targets: "Your targets",
 };
 
@@ -54,6 +55,7 @@ interface Saved {
   meals: Meals;
   pantry: string[];
   creatine: boolean | null;
+  dayStart: number;
 }
 
 const STORAGE = "tare.onboarding";
@@ -79,6 +81,7 @@ export function Onboarding() {
       meals: EMPTY_MEALS,
       pantry: [],
       creatine: null,
+      dayStart: 3,
     };
     try {
       const raw = localStorage.getItem(STORAGE);
@@ -154,6 +157,7 @@ export function Onboarding() {
         name: draft.name?.trim() ?? null,
         allergies_or_avoid: draft.allergies_or_avoid?.trim() || null,
         takes_creatine: saved.creatine ?? false,
+        day_start_hour: saved.dayStart ?? 3,
         target_kcal: kcal,
         target_protein_g: protein,
         target_water_ml: water,
@@ -318,6 +322,11 @@ export function Onboarding() {
 
               {step === "notifications" && (
                 <div className="space-y-4">
+                  <label htmlFor="day-start" className="block text-sm text-text-2">
+                    When does your day start? Anything you eat before this counts for the day before.
+                  </label>
+                  <DayStartSelect id="day-start" value={saved.dayStart ?? 3} onChange={(dayStart) => update({ dayStart })} />
+                  <div className="h-4" />
                   <p className="text-sm text-text-2">
                     Tare can remind you in the evening if your water is low{saved.creatine ? ", and if you haven't had creatine" : ""}.
                   </p>

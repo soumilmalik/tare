@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       throw new AiError("Add a photo or describe what you ate.", 400);
     }
 
-    const ctx = await loadUserContext(userId);
+    const ctx = await loadUserContext(userId, { pantry: false });
     const content: Anthropic.Beta.BetaContentBlockParam[] = images.map((data) => ({
       type: "image",
       source: { type: "base64", media_type: "image/jpeg", data },
@@ -44,6 +44,7 @@ export async function POST(request: Request) {
     const estimate = await callAi({
       userId,
       timezone: ctx.timezone,
+      dayStartHour: ctx.dayStartHour,
       feature: previous ? "re_estimate" : images.length ? "estimate_photo" : "estimate_text",
       tier: images.length ? "photo" : "text",
       system: `${NUTRITION_RULES}\n\nAbout the user:\n${contextBlock(ctx)}`,

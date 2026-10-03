@@ -78,14 +78,15 @@ export function Toggle({
       aria-label={label}
       onClick={() => onChange(!checked)}
       className={cn(
-        "relative h-7 w-12 shrink-0 rounded-full border transition-colors",
+        "relative h-7 w-12 shrink-0 rounded-full border p-0 transition-colors",
         checked ? "border-text-1 bg-text-1" : "border-line bg-surface-2",
       )}
     >
       <span
         className={cn(
-          "absolute top-0.5 size-5.5 rounded-full transition-transform duration-200",
-          checked ? "translate-x-5.5 bg-bg" : "translate-x-0.5 bg-text-2",
+          // Pinned to the left edge; iOS otherwise centres it inside the button.
+          "absolute top-[2px] left-[2px] size-[22px] rounded-full transition-transform duration-200",
+          checked ? "translate-x-[20px] bg-bg" : "translate-x-0 bg-text-2",
         )}
       />
     </button>

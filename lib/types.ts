@@ -23,6 +23,8 @@ export interface Profile {
   target_protein_g: number | null;
   target_water_ml: number | null;
   timezone: string;
+  /** Hour (0–6) when a new day starts; default 3. */
+  day_start_hour?: number;
   notify_water: boolean;
   water_reminder_time: string;
   notify_creatine: boolean;

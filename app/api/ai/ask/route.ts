@@ -21,11 +21,12 @@ export async function POST(request: Request) {
     const userId = await requireUser();
     const parsed = Body.safeParse(await request.json());
     if (!parsed.success) throw new AiError("Ask a question about food or nutrition.", 400);
-    const ctx = await loadUserContext(userId);
+    const ctx = await loadUserContext(userId, { pantry: false });
 
     const result = await callAi({
       userId,
       timezone: ctx.timezone,
+      dayStartHour: ctx.dayStartHour,
       feature: "ask",
       tier: "text",
       system: `${NUTRITION_RULES}

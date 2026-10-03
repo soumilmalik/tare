@@ -1,12 +1,16 @@
 export const DEFAULT_TZ = "Asia/Kolkata";
-const DAY_START_HOUR = 3;
+export const DEFAULT_DAY_START_HOUR = 3;
 
 /**
- * The user's "logical" date as YYYY-MM-DD: the day resets at 3:00 AM in their
- * timezone, so 1:30 AM still counts as yesterday. Mirrors public.logical_date().
+ * The user's "logical" date as YYYY-MM-DD: the day resets at their chosen hour
+ * (3:00 AM by default) in their timezone, so 1:30 AM still counts as yesterday.
  */
-export function logicalDate(now: Date = new Date(), timeZone = DEFAULT_TZ): string {
-  const shifted = new Date(now.getTime() - DAY_START_HOUR * 60 * 60 * 1000);
+export function logicalDate(
+  now: Date = new Date(),
+  timeZone = DEFAULT_TZ,
+  dayStartHour = DEFAULT_DAY_START_HOUR,
+): string {
+  const shifted = new Date(now.getTime() - dayStartHour * 60 * 60 * 1000);
   // en-CA formats dates as YYYY-MM-DD.
   return new Intl.DateTimeFormat("en-CA", {
     timeZone,

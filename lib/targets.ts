@@ -150,3 +150,8 @@ export function targetInputFromProfile(p: {
     workoutMinutes: p.workout_minutes ?? 0,
   };
 }
+
+/** Water below this by the reminder time triggers the low-water reminder (SPEC §11). */
+export function lowWaterMl(targetWaterMl: number | null | undefined) {
+  return Math.max(1500, Math.round((0.75 * (targetWaterMl ?? 2000)) / 50) * 50);
+}

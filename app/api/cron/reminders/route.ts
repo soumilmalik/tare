@@ -1,6 +1,7 @@
 import webpush from "web-push";
 import { logicalDate } from "@/lib/dates";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { lowWaterMl } from "@/lib/targets";
 
 /**
  * Runs every 15 minutes (Supabase pg_cron → this URL). Sends each due reminder
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
   const { data: profiles } = await db
     .from("profiles")
     .select(
-      "user_id, timezone, target_water_ml, takes_creatine, notify_water, water_reminder_time, notify_creatine, creatine_reminder_time, notify_meal_nudge",
+      "user_id, timezone, day_start_hour, target_water_ml, takes_creatine, notify_water, water_reminder_time, notify_creatine, creatine_reminder_time, notify_meal_nudge",
     )
     .in("user_id", userIds);
 
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
 
   for (const p of profiles ?? []) {
     const tz = p.timezone || "Asia/Kolkata";
-    const today = logicalDate(now, tz);
+    const today = logicalDate(now, tz, p.day_start_hour ?? 3);
     const nowMin = localMinutes(now, tz);
     const { data: day } = await db
       .from("daily_summary")
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
 
     const due: { kind: "water" | "creatine" | "meal"; body: string }[] = [];
     const water = day?.water_ml ?? 0;
-    const waterFloor = Math.max(1500, 0.75 * (p.target_water_ml ?? 2000));
+    const waterFloor = lowWaterMl(p.target_water_ml);
     if (p.notify_water && isDue(nowMin, p.water_reminder_time) && water < waterFloor) {
       due.push({ kind: "water", body: "Water is low today — finish your intake." });
     }

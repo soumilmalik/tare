@@ -66,6 +66,7 @@ Never commit `.env.local`. It is git-ignored.
 8. **Project Settings → API Keys**: copy the **Project URL** and the **Publishable key** into `.env.local` and into Vercel.
 9. **SQL Editor**: run `supabase/migrations/0003_weight_and_reminders.sql`.
 10. **Reminders**: open `supabase/migrations/0004_reminders_cron.sql`, replace `YOUR_CRON_SECRET` with your `CRON_SECRET` (and the URL if yours differs), then run it. It calls the app every 15 minutes to send due reminders.
+11. **SQL Editor**: run `supabase/migrations/0005_day_start_hour.sql` (lets each person choose when their day resets).
 
 Gmail allows about 500 emails a day, which is plenty for a few users. To share the app widely, switch the SMTP settings to a dedicated sender such as Resend.
 
