@@ -53,8 +53,9 @@ export default function SmoothTab({ items, selected, onSelect }: SmoothTabProps)
     tabRefs.current.get(next.id)?.focus();
   };
 
+  // fixed inset-0, not 100dvh: iOS home-screen apps report a viewport one status bar too short.
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-bg">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-bg">
       {/* Screens: one track, translated by whole screen widths */}
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <motion.div

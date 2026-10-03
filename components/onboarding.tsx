@@ -170,7 +170,7 @@ export function Onboarding() {
   }
 
   return (
-    <main className="pt-safe pb-safe flex h-dvh flex-col bg-bg">
+    <main className="pt-safe pb-safe fixed inset-0 flex flex-col bg-bg">
       <header className="flex items-center justify-between px-3 pt-3">
         <button
           type="button"

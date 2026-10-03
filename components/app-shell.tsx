@@ -39,7 +39,7 @@ function Shell() {
 
   if (!store.ready) {
     return (
-      <div className="flex h-dvh items-center justify-center" aria-busy="true">
+      <div className="fixed inset-0 flex items-center justify-center" aria-busy="true">
         <span className="text-sm font-semibold tracking-[0.2em] text-text-3">TARE</span>
       </div>
     );

@@ -132,7 +132,7 @@ export function AiMealsScreen() {
         {loading && !current && (
           <div className="space-y-3" aria-label="Loading suggestions">
             {[0, 1].map((i) => (
-              <div key={i} className="h-80 animate-pulse rounded-2xl border border-line bg-surface" />
+              <div key={i} className="h-28 animate-pulse rounded-2xl border border-line bg-surface" />
             ))}
           </div>
         )}

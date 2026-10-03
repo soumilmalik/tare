@@ -3,11 +3,12 @@
 /**
  * Adapted from Card Flip by @dorianbaffier (kokonutui.com, MIT): flips on tap
  * (not hover), monochrome (no orange), content from a suggestion, and
- * "Log this" instead of "Start today".
+ * "Log this" instead of "Start today". The card is as tall as the side being
+ * shown, so the front has no empty space.
  */
 
 import { ArrowRight, Repeat2 } from "lucide-react";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export interface FlipSuggestion {
@@ -21,9 +22,28 @@ export interface FlipSuggestion {
 
 export function CardFlip({ s, onLog }: { s: FlipSuggestion; onLog: () => void }) {
   const [flipped, setFlipped] = useState(false);
+  const front = useRef<HTMLButtonElement>(null);
+  const back = useRef<HTMLDivElement>(null);
+  const [heights, setHeights] = useState({ front: 0, back: 0 });
+
+  // Both faces are stacked absolutely for the 3D flip, so measure them.
+  useLayoutEffect(() => {
+    const measure = () =>
+      setHeights({ front: front.current?.scrollHeight ?? 0, back: back.current?.scrollHeight ?? 0 });
+    measure();
+    const observer = new ResizeObserver(measure);
+    if (front.current) observer.observe(front.current);
+    if (back.current) observer.observe(back.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const height = flipped ? heights.back : heights.front;
 
   return (
-    <div className="relative h-80 w-full [perspective:2000px]">
+    <div
+      className="relative w-full transition-[height] duration-500 ease-[cubic-bezier(0.77,0,0.175,1)] [perspective:2000px] motion-reduce:transition-none"
+      style={{ height: height || undefined }}
+    >
       <div
         className={cn(
           "relative h-full w-full [transform-style:preserve-3d]",
@@ -33,57 +53,55 @@ export function CardFlip({ s, onLog }: { s: FlipSuggestion; onLog: () => void })
       >
         {/* Front */}
         <button
+          ref={front}
           type="button"
           onClick={() => setFlipped(true)}
-          aria-label={`${s.name}. Tap for recipe.`}
+          aria-label={`${s.name}, ${s.kcal} kcal, ${s.protein} g protein. Tap for recipe.`}
           aria-hidden={flipped}
           tabIndex={flipped ? -1 : 0}
-          className="absolute inset-0 flex flex-col justify-between rounded-2xl border border-line bg-surface p-5 text-left [backface-visibility:hidden]"
+          className="absolute inset-x-0 top-0 block w-full space-y-1.5 rounded-2xl border border-line bg-surface p-4 text-left [backface-visibility:hidden]"
         >
-          <span className="flex items-center justify-between text-xs text-text-3">
-            Suggestion <Repeat2 className="size-4" aria-hidden />
+          <span className="flex items-start justify-between gap-3">
+            <span className="text-base leading-snug font-semibold">{s.name}</span>
+            <Repeat2 className="mt-0.5 size-4 shrink-0 text-text-3" aria-hidden />
           </span>
-          <span className="space-y-2">
-            <span className="block text-lg leading-snug font-semibold">{s.name}</span>
-            <span className="block text-sm text-text-2 tabular-nums">
-              {s.kcal} kcal · {s.protein} g protein
-            </span>
-            <span className="block text-sm text-text-3">{s.why}</span>
+          <span className="block text-sm text-text-2 tabular-nums">
+            {s.kcal} kcal · {s.protein} g protein
           </span>
+          <span className="block text-sm text-text-3">{s.why}</span>
         </button>
 
         {/* Back */}
         <div
+          ref={back}
           aria-hidden={!flipped}
-          className="absolute inset-0 flex flex-col rounded-2xl border border-line bg-surface p-5 [backface-visibility:hidden] [transform:rotateY(180deg)]"
+          className="absolute inset-x-0 top-0 space-y-3 rounded-2xl border border-line bg-surface p-4 [backface-visibility:hidden] [transform:rotateY(180deg)]"
         >
           <button
             type="button"
             tabIndex={flipped ? 0 : -1}
             onClick={() => setFlipped(false)}
-            className="flex items-center justify-between text-left"
+            className="flex w-full items-start justify-between gap-3 text-left"
             aria-label="Flip back"
           >
-            <span className="font-semibold">{s.name}</span>
-            <Repeat2 className="size-4 text-text-3" aria-hidden />
+            <span className="font-semibold leading-snug">{s.name}</span>
+            <Repeat2 className="mt-0.5 size-4 shrink-0 text-text-3" aria-hidden />
           </button>
-          <div className="mt-3 min-h-0 flex-1 space-y-3 overflow-y-auto text-sm">
-            <ul className="space-y-1 text-text-2">
-              {s.ingredients.map((i) => (
-                <li key={i}>· {i}</li>
-              ))}
-            </ul>
-            <ol className="list-decimal space-y-1 pl-4 text-text-2">
-              {s.steps.map((step) => (
-                <li key={step}>{step}</li>
-              ))}
-            </ol>
-          </div>
+          <ul className="space-y-1 text-sm text-text-2">
+            {s.ingredients.map((i) => (
+              <li key={i}>· {i}</li>
+            ))}
+          </ul>
+          <ol className="list-decimal space-y-1 pl-4 text-sm text-text-2">
+            {s.steps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
           <button
             type="button"
             tabIndex={flipped ? 0 : -1}
             onClick={onLog}
-            className="mt-3 flex h-11 items-center justify-between rounded-xl bg-surface-2 px-4 text-sm font-medium"
+            className="flex h-11 w-full items-center justify-between rounded-xl bg-surface-2 px-4 text-sm font-medium"
           >
             Log this <ArrowRight className="size-4" />
           </button>
