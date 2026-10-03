@@ -241,3 +241,15 @@ For each phase: list what you'll build, build it, then tell me exactly how to te
 - Prefer simple, readable code over clever abstractions. No placeholder or mock data in finished features.
 - Never commit secrets. Provide `.env.example`.
 - Write a short `README.md`: setup, env vars, deploy, install on iPhone, how to add a new user.
+
+---
+
+## 17. Decisions made during the build (override earlier sections)
+
+- **App name:** Tare.
+- **Auth (§4):** Google sign-in first, email 6-digit code as a fallback. Invite-only: emails must be in `public.allowed_emails` (and added as test users on the Google OAuth app).
+- **AI provider (§4, §12):** Claude. Photo estimates use Claude Sonnet 5.5; everything else uses Claude Haiku 4.5 (`AI_MODEL_PHOTO`, `AI_MODEL_TEXT`). Budget ~₹100–200/month.
+- **Voice (§7.6):** live speech-to-text with ElevenLabs Scribe (realtime, punctuated), then the text is estimated like a typed entry. When the free ElevenLabs minutes run out, voice falls back to the typing sheet.
+- **Extra tables:** `weight_logs` (weight trend in Insights) and `reminder_log` (each reminder at most once a day).
+- **Scheduler (§11):** Supabase `pg_cron` calls `/api/cron/reminders` every 15 minutes (Vercel's free cron only runs daily).
+- **Extra packages:** `@anthropic-ai/sdk`, `web-push`.

@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/~offline"];
+// /api/cron authenticates with CRON_SECRET instead of a session.
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/~offline", "/api/cron"];
 
 /**
  * Refreshes the Supabase session cookie on every navigation and sends
@@ -39,7 +40,7 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 
-  if (!signedIn && path.startsWith("/api/")) {
+  if (!signedIn && !isPublic && path.startsWith("/api/")) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
   if (!signedIn && !isPublic) {

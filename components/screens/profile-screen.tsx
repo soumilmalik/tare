@@ -1,36 +1,68 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useAppNav } from "@/components/app-context";
+import { PantryEditor } from "@/components/pantry-editor";
+import { Insights, MonthlySummary, useDays } from "@/components/profile/insights";
+import {
+  CreatineSection,
+  DetailsSection,
+  ExportSection,
+  FoodsSection,
+  HistorySection,
+  NotificationsSection,
+  Section,
+  TargetsSection,
+  UsageSection,
+} from "@/components/profile/sections";
+import { secondaryButton } from "@/components/ui/fields";
 import { createClient } from "@/lib/supabase/client";
+import { useStore } from "@/lib/store";
 import { Screen } from "./screen";
 
 export function ProfileScreen() {
-  const [email, setEmail] = useState<string | null>(null);
+  const { profile, email } = useStore();
+  const { tab } = useAppNav();
+  const active = tab === "profile";
+  const { days, weights } = useDays(active);
   const [signingOut, setSigningOut] = useState(false);
-
-  useEffect(() => {
-    createClient()
-      .auth.getSession()
-      .then(({ data }) => setEmail(data.session?.user.email ?? null));
-  }, []);
 
   async function signOut() {
     setSigningOut(true);
     await createClient().auth.signOut();
+    try {
+      // Cached data belongs to the signed-out user.
+      for (const k of Object.keys(localStorage)) if (k.startsWith("tare.")) localStorage.removeItem(k);
+    } catch {}
     window.location.replace("/login");
   }
 
   return (
-    <Screen title="Profile">
-      <p className="mt-1 h-5 truncate text-sm text-text-2">{email}</p>
-      <button
-        type="button"
-        onClick={signOut}
-        disabled={signingOut}
-        className="mt-10 h-12 w-full rounded-xl border border-line bg-surface text-text-1 transition-opacity active:opacity-80 disabled:opacity-40"
-      >
+    <Screen title={profile?.name || "Profile"} subtitle={<span className="truncate">{email}</span>}>
+      <DetailsSection />
+      <TargetsSection />
+      <FoodsSection />
+      <Section id="pantry-profile" title="Usually at home">
+        <PantryEditor />
+      </Section>
+      <CreatineSection />
+      <NotificationsSection />
+
+      <Section id="insights" title="Insights">
+        <div className="space-y-6">
+          <MonthlySummary active={active} />
+          <Insights days={days} weights={weights} />
+        </div>
+      </Section>
+
+      <ExportSection />
+      <UsageSection active={active} />
+
+      <button type="button" onClick={signOut} disabled={signingOut} className={`${secondaryButton} mt-10`}>
         {signingOut ? "Signing out…" : "Sign out"}
       </button>
+
+      <HistorySection days={days} />
     </Screen>
   );
 }

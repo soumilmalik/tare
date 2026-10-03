@@ -44,3 +44,6 @@ next-env.d.ts
 # serwist (generated at build time)
 public/sw*
 public/swe-worker*
+
+# Filled-in SQL containing secrets
+supabase/local/

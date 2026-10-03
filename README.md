@@ -17,11 +17,17 @@ npm run dev                    # http://localhost:3000
 
 ## Environment variables
 
-| Name | Where to find it | Needed from |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API Keys → Project URL | Phase 1 |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys → Publishable key | Phase 1 |
-| The rest of `.env.example` | Added as each phase needs them | Later |
+All of them are listed with explanations in `.env.example`. Put them in `.env.local` for local development and in **Vercel → Settings → Environment Variables** for the live app.
+
+| Name | Where to find it |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys |
+| `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys → Secret keys (keep private) |
+| `ANTHROPIC_API_KEY` | console.anthropic.com → API Keys |
+| `ELEVENLABS_API_KEY` | elevenlabs.io → Developers → API Keys |
+| `ADMIN_EMAIL` | Your own email (shows the Usage and cost view) |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | `npx web-push generate-vapid-keys` |
+| `CRON_SECRET` | Any long random string |
 
 Never commit `.env.local`. It is git-ignored.
 
@@ -58,6 +64,8 @@ Never commit `.env.local`. It is git-ignored.
    - **Site URL:** your Vercel URL, e.g. `https://tare.vercel.app`.
    - **Redirect URLs:** add `http://localhost:3000/**` and `https://<your-vercel-url>/**`.
 8. **Project Settings → API Keys**: copy the **Project URL** and the **Publishable key** into `.env.local` and into Vercel.
+9. **SQL Editor**: run `supabase/migrations/0003_weight_and_reminders.sql`.
+10. **Reminders**: open `supabase/migrations/0004_reminders_cron.sql`, replace `YOUR_CRON_SECRET` with your `CRON_SECRET` (and the URL if yours differs), then run it. It calls the app every 15 minutes to send due reminders.
 
 Gmail allows about 500 emails a day, which is plenty for a few users. To share the app widely, switch the SMTP settings to a dedicated sender such as Resend.
 
@@ -65,7 +73,7 @@ Gmail allows about 500 emails a day, which is plenty for a few users. To share t
 
 1. Push this folder to a **private** GitHub repo.
 2. Go to [vercel.com](https://vercel.com) and **Continue with GitHub**, then **Add New → Project** and import the repo.
-3. Before deploying, open **Environment Variables** and add the two `NEXT_PUBLIC_SUPABASE_*` values. Then click **Deploy**.
+3. Before deploying, open **Environment Variables** and add every value from `.env.local` (see the table above). Then click **Deploy**.
 4. Every `git push` to `main` redeploys automatically.
 
 ## Install on iPhone
@@ -85,8 +93,13 @@ Gmail allows about 500 emails a day, which is plenty for a few users. To share t
 
 ```
 app/                  routes (/, /login, /auth/callback, /~offline), manifest, service worker (sw.ts)
-components/           app shell, tab bar (smooth-tab.tsx), tab screens
-lib/supabase/         browser / server / proxy Supabase clients
+components/           app shell, tab bar, screens, onboarding, logging flow, search
+lib/supabase/         browser / server / proxy / admin Supabase clients
+lib/ai.ts             the only file that talks to Claude (models, limits, cost logging)
+lib/targets.ts        calorie / protein / water target maths (no AI)
+lib/store.tsx         app data, instant cache, offline-first writes (lib/sync-queue.ts)
+lib/scribe.ts         ElevenLabs realtime voice → text
+app/api/              AI routes, voice token, reminders job, admin usage
 lib/dates.ts          3 AM "logical day" helpers (IST default)
 proxy.ts              refreshes the session, redirects signed-out users to /login
 supabase/migrations/  database schema + RLS

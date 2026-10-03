@@ -22,16 +22,16 @@ export interface TabItem {
 
 interface SmoothTabProps {
   items: TabItem[];
-  defaultTabId: string;
-  onChange?: (tabId: string) => void;
+  selected: string;
+  onSelect: (tabId: string) => void;
 }
 
 const spring = { type: "spring", stiffness: 400, damping: 36 } as const;
 const slide = { duration: 0.28, ease: [0.32, 0.72, 0, 1] } as const;
 
-export default function SmoothTab({ items, defaultTabId, onChange }: SmoothTabProps) {
-  const [selected, setSelected] = React.useState(defaultTabId);
-  const [visited, setVisited] = React.useState(() => new Set([defaultTabId]));
+export default function SmoothTab({ items, selected, onSelect }: SmoothTabProps) {
+  const [visited, setVisited] = React.useState(() => new Set([selected]));
+  if (!visited.has(selected)) setVisited(new Set(visited).add(selected));
   const tabRefs = React.useRef(new Map<string, HTMLButtonElement>());
 
   const index = Math.max(
@@ -40,10 +40,7 @@ export default function SmoothTab({ items, defaultTabId, onChange }: SmoothTabPr
   );
 
   const select = (tabId: string) => {
-    if (tabId === selected) return;
-    setSelected(tabId);
-    setVisited((v) => (v.has(tabId) ? v : new Set(v).add(tabId)));
-    onChange?.(tabId);
+    if (tabId !== selected) onSelect(tabId);
   };
 
   // Arrow-key navigation, only while focus is on a tab (never hijacks inputs).
