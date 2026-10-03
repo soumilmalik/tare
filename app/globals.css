@@ -107,13 +107,10 @@
   }
 }
 
-/* The app's full-screen frame. --app-h is set in app/layout.tsx. */
+/* The app's full-screen frame (pinned to the screen edges, not 100dvh). */
 @utility app-frame {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--app-h, 100dvh);
+  inset: 0;
 }
 
 @utility pt-safe {

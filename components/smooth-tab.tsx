@@ -53,7 +53,7 @@ export default function SmoothTab({ items, selected, onSelect }: SmoothTabProps)
     tabRefs.current.get(next.id)?.focus();
   };
 
-  // app-frame: full real screen height (see app/layout.tsx).
+  // app-frame: pinned to the screen edges (see globals.css).
   return (
     <div className="app-frame flex flex-col overflow-hidden bg-bg">
       {/* Screens: one track, translated by whole screen widths */}
