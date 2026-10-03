@@ -325,7 +325,7 @@ export function FoodsSection() {
                   value={text[slot]}
                   onChange={(e) => setText((t) => ({ ...t, [slot]: e.target.value }))}
                 />
-                <DictateButton onText={(v) => setText((t) => ({ ...t, [slot]: t[slot] ? `${t[slot]}\n${v}` : v }))} />
+                <DictateButton joiner={"\n"} value={text[slot]} onChange={(v) => setText((t) => ({ ...t, [slot]: v }))} />
               </div>
             </Field>
           ))}

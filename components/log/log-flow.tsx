@@ -6,6 +6,7 @@ import { DictateButton } from "@/components/dictate-button";
 import { MealCard } from "@/components/log/meal-card";
 import { inputClass, primaryButton } from "@/components/ui/fields";
 import { Sheet } from "@/components/ui/sheet";
+import { Thinking } from "@/components/ui/thinking";
 import { VoiceRecorder } from "@/components/voice-recorder";
 import { postJson } from "@/lib/api";
 import { compressImage } from "@/lib/image";
@@ -216,7 +217,7 @@ export function LogFlowProvider({ children }: { children: React.ReactNode }) {
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
-            <DictateButton onText={(t) => setNote((n) => `${n} ${t}`.trim())} />
+            <DictateButton value={note} onChange={setNote} />
           </div>
           <p role="alert" className="min-h-5 text-sm text-text-2">
             {error}
@@ -237,7 +238,7 @@ export function LogFlowProvider({ children }: { children: React.ReactNode }) {
               }
             }}
           >
-            {busy ? "Estimating…" : "Estimate"}
+            {busy ? <Thinking className="text-bg [&_*]:text-bg" /> : "Estimate"}
           </button>
         </div>
       </Sheet>
@@ -261,7 +262,7 @@ export function LogFlowProvider({ children }: { children: React.ReactNode }) {
           disabled={busy || dictation.listening || !dictation.text}
           onClick={() => estimate({ images: [], text: dictation.text }, "voice")}
         >
-          {busy ? "Estimating…" : "Estimate"}
+          {busy ? <Thinking className="text-bg [&_*]:text-bg" /> : "Estimate"}
         </button>
       </Sheet>
 
@@ -288,7 +289,7 @@ export function LogFlowProvider({ children }: { children: React.ReactNode }) {
             {error}
           </p>
           <button type="submit" className={primaryButton} disabled={busy || !chatText.trim()}>
-            {busy ? "Estimating…" : "Send"}
+            {busy ? <Thinking className="text-bg [&_*]:text-bg" /> : "Send"}
           </button>
         </form>
       </Sheet>

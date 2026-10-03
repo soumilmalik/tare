@@ -25,6 +25,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { type TabId, useAppNav } from "@/components/app-context";
 import { useLogFlow } from "@/components/log/log-flow";
+import { Thinking } from "@/components/ui/thinking";
 import { postJson } from "@/lib/api";
 import { createClient } from "@/lib/supabase/client";
 import { useStore } from "@/lib/store";
@@ -299,7 +300,7 @@ export function GlobalSearch({ open, initialQuery, onClose }: { open: boolean; i
                 </button>
                 {ai && ai.q === query.trim() && (
                   <div className="mx-3 mt-1 space-y-3 rounded-xl border border-line bg-surface p-4 text-sm" aria-live="polite">
-                    {ai.loading && <p className="text-text-3">Thinking…</p>}
+                    {ai.loading && <Thinking />}
                     {ai.error && <p className="text-text-2">{ai.error}</p>}
                     {ai.answer && <p className="leading-relaxed text-text-1">{ai.answer.answer}</p>}
                     {ai.answer?.meal && (

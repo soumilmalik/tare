@@ -4,6 +4,7 @@ import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { inputClass, primaryButton, secondaryButton } from "@/components/ui/fields";
 import { NumberInput } from "@/components/ui/number-input";
+import { Thinking } from "@/components/ui/thinking";
 import { draftTotals } from "@/lib/store";
 import type { MealDraft, MealItem } from "@/lib/types";
 
@@ -153,7 +154,7 @@ export function MealCard({
             onClick={reEstimate}
             className="h-11 shrink-0 rounded-xl border border-line px-3 text-sm disabled:opacity-40"
           >
-            {busy ? "…" : "Re-estimate"}
+            {busy ? <Thinking className="text-xs" /> : "Re-estimate"}
           </button>
         </div>
       )}

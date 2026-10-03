@@ -170,7 +170,7 @@ export function Onboarding() {
   }
 
   return (
-    <main className="pt-safe pb-safe fixed inset-0 flex flex-col bg-bg">
+    <main className="pt-safe pb-safe app-frame flex flex-col bg-bg">
       <header className="flex items-center justify-between px-3 pt-3">
         <button
           type="button"
@@ -238,12 +238,8 @@ export function Onboarding() {
                           onChange={(e) => update({ meals: { ...saved.meals, [slot]: e.target.value } })}
                         />
                         <DictateButton
-                          onText={(t) =>
-                            setSaved((s) => ({
-                              ...s,
-                              meals: { ...s.meals, [slot]: `${s.meals[slot]} ${t}`.trim() },
-                            }))
-                          }
+                          value={saved.meals[slot]}
+                          onChange={(t) => setSaved((s) => ({ ...s, meals: { ...s.meals, [slot]: t } }))}
                         />
                       </div>
                     </Field>

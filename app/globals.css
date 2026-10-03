@@ -107,6 +107,15 @@
   }
 }
 
+/* The app's full-screen frame. --app-h is set in app/layout.tsx. */
+@utility app-frame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--app-h, 100dvh);
+}
+
 @utility pt-safe {
   padding-top: env(safe-area-inset-top, 0px);
 }

@@ -8,6 +8,7 @@ import { useLogFlow } from "@/components/log/log-flow";
 import { CardFlip } from "@/components/meals/card-flip";
 import { PantryEditor } from "@/components/pantry-editor";
 import { inputClass, secondaryButton } from "@/components/ui/fields";
+import { Thinking } from "@/components/ui/thinking";
 import { postJson } from "@/lib/api";
 import { DEFAULT_TZ } from "@/lib/dates";
 import { draftTotals, useStore } from "@/lib/store";
@@ -129,13 +130,7 @@ export function AiMealsScreen() {
 
       <section className="mt-6 space-y-3" aria-busy={loading}>
         {!store.online && !current && <p className="text-sm text-text-3">Suggestions need internet.</p>}
-        {loading && !current && (
-          <div className="space-y-3" aria-label="Loading suggestions">
-            {[0, 1].map((i) => (
-              <div key={i} className="h-28 animate-pulse rounded-2xl border border-line bg-surface" />
-            ))}
-          </div>
-        )}
+        {loading && !current && <Thinking className="py-6" label="Finding meal ideas" />}
         {error?.key === key && !current && (
           <div className="space-y-3">
             <p className="text-sm text-text-2">{error.message}</p>
@@ -187,13 +182,14 @@ export function AiMealsScreen() {
           ))}
         </div>
         <div className="flex items-start gap-2">
-          <input
-            className={`${inputClass} h-11`}
-            placeholder="Optional, e.g. craving something sweet"
+          <textarea
+            rows={2}
+            className={`${inputClass} h-auto min-h-11 flex-1 resize-none py-2.5 [field-sizing:content]`}
+            placeholder="Optional, e.g. I have eggs and bread, want something quick"
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
-          <DictateButton onText={(t) => setNote((n) => `${n} ${t}`.trim())} />
+          <DictateButton value={note} onChange={setNote} />
         </div>
         <button
           type="button"
