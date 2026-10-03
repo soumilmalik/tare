@@ -118,7 +118,7 @@ export function HomeScreen() {
           <button
             type="button"
             onClick={flow.pickPhotos}
-            aria-label="Log with a photo"
+            aria-label="Log with a photo or screenshot"
             className="flex size-16 items-center justify-center rounded-full bg-text-1 text-bg active:opacity-80"
           >
             <Camera className="size-6" />

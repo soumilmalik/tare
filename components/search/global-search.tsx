@@ -105,7 +105,7 @@ export function GlobalSearch({ open, initialQuery, onClose }: { open: boolean; i
       ...(store.profile?.takes_creatine && !store.creatine
         ? [{ id: "a-creatine", label: "Log creatine", hint: "3 g + 250 ml water", icon: icon(Sparkles), run: () => { store.setCreatine(true); close(); } }]
         : []),
-      { id: "a-photo", label: "Log a meal with a photo", icon: icon(Camera), keywords: "camera", run: () => { close(); flow.pickPhotos(); } },
+      { id: "a-photo", label: "Log a meal with a photo", icon: icon(Camera), keywords: "camera screenshot upload gallery library", run: () => { close(); flow.pickPhotos(); } },
       { id: "a-text", label: "Log a meal by typing", icon: icon(MessageSquareText), keywords: "chat text", run: () => { close(); flow.openChat(); } },
       { id: "a-export", label: "Export data", hint: "CSV", icon: icon(Download), keywords: "download csv", run: go("profile", "export") },
     ];

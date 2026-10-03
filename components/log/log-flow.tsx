@@ -106,8 +106,9 @@ export function LogFlowProvider({ children }: { children: React.ReactNode }) {
 
   const flow = useMemo<LogFlow>(
     () => ({
-      // Opens the camera straight away (must run inside the tap).
-      pickPhotos: () => cameraInput.current?.click(),
+      // iPhone shows its own menu: Take Photo / Photo Library / Choose File,
+      // so screenshots and saved photos work too (must run inside the tap).
+      pickPhotos: () => libraryInput.current?.click(),
       openVoice: () => {
         setError(null);
         setSheet({ kind: "voice" });
